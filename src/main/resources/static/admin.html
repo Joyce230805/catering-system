@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Menu</title>
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .dish {
+            border-bottom: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        button {
+            margin-left: 10px;
+        }
+
+        .on {
+            color: green;
+        }
+
+        .off {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<h2> Admin - Menu Control</h2>
+
+<div id="menu"></div>
+
+<script>
+fetch("/api/dishes/all")
+.then(res => res.json())
+.then(data => {
+    const div = document.getElementById("menu");
+
+    data.forEach(d => {
+        div.innerHTML += `
+            <div class="dish">
+                ${d.nameEn} (${d.nameCn})
+                <span class="${d.availableToday ? 'on' : 'off'}">
+                    ${d.availableToday ? 'ON' : 'OFF'}
+                </span>
+                <button onclick="toggle(${d.id})">Sold out</button>
+            </div>
+        `;
+    });
+});
+
+function toggle(id) {
+    fetch(`/api/dishes/${id}/toggle`, {
+        method: "PUT"
+    }).then(() => location.reload());
+}
+</script>
+
+</body>
+</html>

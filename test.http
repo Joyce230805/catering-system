@@ -1,0 +1,8 @@
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+
+{
+  "customerName": "Joyce",
+  "phone": "0432504465",
+  "pickupTime": "2026-03-23T18:30:00"
+}
