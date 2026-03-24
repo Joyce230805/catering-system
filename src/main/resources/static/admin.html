@@ -46,8 +46,7 @@ fetch("/api/dishes/all")
                 <span class="${d.availableToday ? 'on' : 'off'}">
                     ${d.availableToday ? 'ON' : 'OFF'}
                 </span>
-                <button onclick="toggle(${d.id})">Sold out</button>
-            </div>
+                <input type="checkbox" id="dish-${d.id}" ${d.availableToday ? "checked" : ""}>            </div>
         `;
     });
 });
@@ -57,7 +56,38 @@ function toggle(id) {
         method: "PUT"
     }).then(() => location.reload());
 }
+
+function saveMenu() {
+
+    let updates = [];
+
+    document.querySelectorAll("[id^='dish-']").forEach(el => {
+
+        const id = el.id.split("-")[1];
+        const available = el.checked;
+
+        updates.push({
+            id: id,
+            availableToday: available
+        });
+    });
+
+    fetch("/api/dishes/batch", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updates)
+    })
+    .then(() => {
+        alert("Menu updated!");
+    });
+}
+
 </script>
+
+<br><br>
+<button onclick="saveMenu()">Save</button>
 
 </body>
 </html>

@@ -14,11 +14,12 @@ public class Dish {
     private Long id;
 
     private String nameEn;
-    private String nameCn;
+    private String nameCn; 
 
     private String category; // MAIN / SIDE
 
     private Double price;
 
     private Boolean availableToday;
+    
 }

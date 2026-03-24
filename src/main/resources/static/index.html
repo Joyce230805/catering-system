@@ -42,7 +42,13 @@
             background: red;
             color: white;
         }
+
+        
     </style>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catering Order</title>
 </head>
 <body>
 
@@ -110,10 +116,15 @@ function addMeal() {
 
     dishes.filter(d => d.category === "SIDE").forEach(d => {
         html += `
-        ${d.nameEn} (${d.nameCn})
-        <input type="number" min="0" value="0" id="side-${mealCount}-${d.id}" style="width:50px">
-        <br>`;
+        <div>
+            ${d.nameEn} (${d.nameCn})
+            <button onclick="changeQty(${mealCount}, '${d.nameEn}', -1)">-</button>
+            <span id="side-${mealCount}-${d.nameEn}">0</span>
+            <button onclick="changeQty(${mealCount}, '${d.nameEn}', 1)">+</button>
+        </div>
+        `;
     });
+
    
     html += `<br>Qty: 
         <input type="number" id="qty-${mealCount}" value="1" min="1" style="width:60px">
@@ -121,12 +132,40 @@ function addMeal() {
         <br><button class="remove-btn" onclick="removeMeal(${mealCount})"> Remove</button>
     </div>`;
 
-    container.innerHTML += html;
+    container.insertAdjacentHTML("beforeend", html);
+}
+
+//限制數量
+function checkSides(mealId) {
+
+    const checked = document.querySelectorAll(`input[name="side-${mealId}"]:checked`);
+
+    // 超過3個
+    if (checked.length > 3) {
+        alert("Choose up to 3 dishes.");
+        checked[checked.length - 1].checked = false;
+        return;
+    }
+
+    // 少於2個（提示，不阻擋）
+    if (checked.length < 2) {
+        document.getElementById("result").innerText = "At least 2 dishes.";
+    } else {
+        document.getElementById("result").innerText = "";
+    }
 }
 
 // 刪除餐
 function removeMeal(id) {
+
     document.getElementById(`meal-${id}`).remove();
+
+    // 清掉該meal的side
+    Object.keys(sideCounts).forEach(key => {
+        if (key.startsWith(id + "-")) {
+            delete sideCounts[key];
+        }
+    });
 }
 
 //地址
@@ -162,20 +201,20 @@ function submitOrder() {
 
         const main = document.querySelector(`input[name="main-${i}"]:checked`);
         
+        
         let selectedSides = [];
 
-        dishes.filter(d => d.category === "SIDE").forEach(d => {
-            const input = document.getElementById(`side-${i}-${d.id}`);
-            if (!input) return;
+        Object.keys(sideCounts).forEach(key => {
+            if (key.startsWith(i + "-")) {
 
-            let qty = parseInt(input.value);
+                const name = key.split("-")[1];
+                const qty = sideCounts[key];
 
-            if (qty > 0) {
                 for (let k = 0; k < qty; k++) {
-                    selectedSides.push(d.nameEn);
+                    selectedSides.push(name);
                 }
             }
-        });
+        });    
 
         const qtyInput = document.getElementById(`qty-${i}`);
 
@@ -229,6 +268,37 @@ function submitOrder() {
     .catch(() => {
         document.getElementById("result").innerText = " Error submitting order";
     });
+}
+
+let sideCounts = {};
+
+function changeQty(mealId, sideName, delta) {
+
+    const key = `${mealId}-${sideName}`;
+
+    if (!sideCounts[key]) sideCounts[key] = 0;
+
+    sideCounts[key] += delta;
+
+    if (sideCounts[key] < 0) sideCounts[key] = 0;
+
+    // 算總數
+    let total = 0;
+    Object.keys(sideCounts).forEach(k => {
+        if (k.startsWith(mealId + "-")) {
+            total += sideCounts[k];
+        }
+    });
+
+    // 超過3
+    if (total > 3) {
+        sideCounts[key]--;
+        alert("最多只能選3個配菜");
+        return;
+    }
+
+    // 更新UI
+    document.getElementById(`side-${mealId}-${sideName}`).innerText = sideCounts[key];
 }
 </script>
 

@@ -23,13 +23,13 @@ public class DishController {
         return dishRepository.findByAvailableTodayTrue();
     }
 
-    // 👉 全部菜（給 admin）
+    //  全部菜（給 admin）
     @GetMapping("/all")
     public List<Dish> getAllDishes() {
         return dishRepository.findAll();
     }
 
-    // 👉 切換開關（最重要🔥）
+    //  切換開關
     @PutMapping("/{id}/toggle")
     public Dish toggleDish(@PathVariable Long id) {
         Dish dish = dishRepository.findById(id).orElseThrow();
@@ -37,5 +37,16 @@ public class DishController {
         dish.setAvailableToday(!dish.getAvailableToday());
 
         return dishRepository.save(dish);
+    }
+
+    
+    @PutMapping("/batch")
+    public void updateBatch(@RequestBody List<Dish> dishes) {
+
+        for (Dish d : dishes) {
+            Dish dish = dishRepository.findById(d.getId()).orElseThrow();
+            dish.setAvailableToday(d.getAvailableToday());
+            dishRepository.save(dish);
+        }
     }
 }
