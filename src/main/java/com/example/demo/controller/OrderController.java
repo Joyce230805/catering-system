@@ -22,6 +22,8 @@ public class OrderController {
     @PostMapping
     public Order createOrder(@RequestBody Order order) {
 
+
+        
         // 👉 存訂單（包含多個 items）
         Order savedOrder = orderRepository.save(order);
 
@@ -47,7 +49,7 @@ public class OrderController {
             }
         }
 
-        // 👉 發送 Email
+        // 發送 Email
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo("highpoint0914@gmail.com");
         message.setSubject("New Catering Order");
