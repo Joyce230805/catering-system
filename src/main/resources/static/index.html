@@ -258,7 +258,19 @@ function submitOrder() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(data)
     })
+    // 先顯示 loading
+document.getElementById("result").innerText = "Submitting... Please wait ⏳";
+
+// 禁用按鈕避免重複送
+document.querySelector(".submit-btn").disabled = true;
+
+fetch("/api/orders", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(data)
+})
     .then(res => {
+
         if (res.ok) {
             window.location.href = "/success.html";
         } else {
@@ -266,8 +278,11 @@ function submitOrder() {
         }
     })
     .catch(() => {
-        document.getElementById("result").innerText = " Error submitting order";
-    });
+        document.getElementById("result").innerText = "Error submitting order";
+    })
+    .finally(() => {
+        document.querySelector(".submit-btn").disabled = false;
+    }); 
 }
 
 let sideCounts = {};
@@ -293,7 +308,7 @@ function changeQty(mealId, sideName, delta) {
     // 超過3
     if (total > 3) {
         sideCounts[key]--;
-        alert("最多只能選3個配菜");
+        alert("Choose up to 3 dishes.");
         return;
     }
 
