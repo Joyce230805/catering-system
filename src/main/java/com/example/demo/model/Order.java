@@ -25,6 +25,9 @@ public class Order {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    private String method;
+    
+    private String address;
     // 
     @OneToMany(cascade = CascadeType.ALL)
     private List<OrderItem> items;

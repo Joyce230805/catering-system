@@ -60,6 +60,17 @@
 <b>Phone:</b><br>
 <input type="text" id="phone"><br><br>
 
+<b>Method:</b><br>
+<select id="method" onchange="toggleAddress()">
+    <option value="pickup">Pick Up</option>
+    <option value="delivery">Delivery</option>
+</select><br><br>
+
+<div id="addressDiv" style="display:none;">
+    <b>Address:</b><br>
+    <input type="text" id="address"><br><br>
+</div>
+
 <b>Pickup Time:</b><br>
 <input type="datetime-local" id="time"><br><br>
 
@@ -95,13 +106,15 @@ function addMeal() {
                  ${d.nameEn} (${d.nameCn})<br>`;
     });
 
-    html += `<br><b>Sides (choose 2~3)</b><br>`;
+    html += `<br><b>Sides (choose 2~3 total)</b><br>`;
 
     dishes.filter(d => d.category === "SIDE").forEach(d => {
-        html += `<input type="checkbox" name="side-${mealCount}" value="${d.nameEn}">
-                 ${d.nameEn} (${d.nameCn})<br>`;
+        html += `
+        ${d.nameEn} (${d.nameCn})
+        <input type="number" min="0" value="0" id="side-${mealCount}-${d.id}" style="width:50px">
+        <br>`;
     });
-
+   
     html += `<br>Qty: 
         <input type="number" id="qty-${mealCount}" value="1" min="1" style="width:60px">
 
@@ -116,12 +129,27 @@ function removeMeal(id) {
     document.getElementById(`meal-${id}`).remove();
 }
 
+//地址
+function toggleAddress() {
+    const method = document.getElementById("method").value;
+    document.getElementById("addressDiv").style.display =
+        method === "delivery" ? "block" : "none";
+}
+
 // 送出訂單
 function submitOrder() {
 
     const name = document.getElementById("name").value;
     const phone = document.getElementById("phone").value;
     const time = document.getElementById("time").value;
+    const method = document.getElementById("method").value;
+    const address = document.getElementById("address").value;
+
+    if (method === "delivery" && !address) {
+        alert("Please enter address");
+        return;
+    }
+
 
     if (!name || !phone || !time) {
         alert("Please fill all customer info");
@@ -133,7 +161,22 @@ function submitOrder() {
     for (let i = 1; i <= mealCount; i++) {
 
         const main = document.querySelector(`input[name="main-${i}"]:checked`);
-        const sides = document.querySelectorAll(`input[name="side-${i}"]:checked`);
+        
+        let selectedSides = [];
+
+        dishes.filter(d => d.category === "SIDE").forEach(d => {
+            const input = document.getElementById(`side-${i}-${d.id}`);
+            if (!input) return;
+
+            let qty = parseInt(input.value);
+
+            if (qty > 0) {
+                for (let k = 0; k < qty; k++) {
+                    selectedSides.push(d.nameEn);
+                }
+            }
+        });
+
         const qtyInput = document.getElementById(`qty-${i}`);
 
         if (!qtyInput) continue; // 已刪除
@@ -143,14 +186,16 @@ function submitOrder() {
             return;
         }
 
-        if (sides.length < 2 || sides.length > 3) {
-            alert(`Meal ${i}: Select 2–3 sides`);
+        let totalSides = selectedSides.length;
+
+        if (totalSides < 2 || totalSides > 3) {
+            alert(`Meal ${i}: Select total 2–3 sides`);
             return;
         }
 
         items.push({
             main: main.value,
-            sides: Array.from(sides).map(s => s.value),
+            sides: selectedSides,
             quantity: parseInt(qtyInput.value)
         });
     }
@@ -164,6 +209,8 @@ function submitOrder() {
         customerName: name,
         phone: phone,
         pickupTime: time,
+        method: method,
+        address: address,
         items: items
     };
 
@@ -172,11 +219,12 @@ function submitOrder() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(data)
     })
-    .then(() => {
-        document.getElementById("result").innerText = " Order submitted!";
-        document.getElementById("orders").innerHTML = "";
-        mealCount = 0;
-        addMeal();
+    .then(res => {
+        if (res.ok) {
+            window.location.href = "/success.html";
+        } else {
+            alert("Submit failed");
+        }
     })
     .catch(() => {
         document.getElementById("result").innerText = " Error submitting order";
