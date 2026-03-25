@@ -51,6 +51,7 @@ public class OrderController {
 
         // 發送 Email
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("highpoint0914@gmail.com");
         message.setTo("highpoint0914@gmail.com");
         message.setSubject("New Catering Order");
         message.setText(emailText.toString());
